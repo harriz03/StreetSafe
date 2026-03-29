@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "444324738206",
+    "project_id": "streetsafedb",
+    "storage_bucket": "streetsafedb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444324738206:android:908d70e4c7e98fa715b78f",
+        "android_client_info": {
+          "package_name": "com.example.streetsafe_code"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHHfmQUXY1hsSLA8t5Vaj3cvrd9VCsTnY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
