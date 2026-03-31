@@ -1,20 +1,42 @@
 package com.example.streetsafe_code
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.appcompat.widget.AppCompatButton
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        auth = FirebaseAuth.getInstance()
+
+        val emailField = findViewById<EditText>(R.id.editUsername)
+        val passwordField = findViewById<EditText>(R.id.editPassword)
+
+        findViewById<AppCompatButton>(R.id.btnLogin).setOnClickListener {
+            val email = emailField.text.toString().trim()
+            val password = passwordField.text.toString().trim()
+
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    startActivity(Intent(this, HomeActivity::class.java))
+                    finish()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Login failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
+
+        findViewById<AppCompatButton>(R.id.btnSignUp).setOnClickListener {
+            startActivity(Intent(this, SignUpActivity::class.java))
         }
     }
 }

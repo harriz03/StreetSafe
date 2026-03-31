@@ -1,3 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">StreetSafe_Code</string>
+
+    <string name="app_name">StreetSafe</string>
+    <string name="desc_shield_icon">Shield icon</string>
+
+    <string name="tagline">Stay aware. Stay protected.</string>
+    <string name="label_sign_in_heading">Sign in to your account</string>
+    <string name="label_username">USERNAME</string>
+    <string name="label_password">PASSWORD</string>
+    <string name="hint_username">Enter your username</string>
+    <string name="hint_password">Enter your password</string>
+    <string name="btn_sign_in">SIGN IN</string>
+    <string name="btn_create_account">CREATE ACCOUNT</string>
+    <string name="label_or_divider">or</string>
+
+    <string name="signup_tagline">Create your account today.</string>
+    <string name="signup_heading">Create a new account</string>
+    <string name="label_email">EMAIL</string>
+    <string name="hint_email">Enter your email address</string>
+    <string name="label_confirm_password">CONFIRM PASSWORD</string>
+    <string name="hint_confirm_password">Re-enter your password</string>
+    <string name="btn_sign_up">SIGN UP</string>
+    <string name="btn_back_to_login">BACK TO LOGIN</string>
+
+    <string name="home_greeting">Good morning,</string>
+    <string name="home_stay_safe">Stay safe today.</string>
+    <string name="home_safe_route_title">Safe Route Suggestion</string>
+    <string name="home_safe_route_subtitle">Tap to find the safest route</string>
+    <string name="home_go">GO →</string>
+    <string name="home_map_title">Nearby Risk Map</string>
+    <string name="home_view_full_map">View Full Map</string>
+    <string name="home_map_loading">Map loading…</string>
+    <string name="home_recent_reports">Recent Reports</string>
+    <string name="home_see_all">See All</string>
+    <string name="home_empty_title">No reports nearby</string>
+    <string name="home_empty_subtitle">Your area looks clear right now.</string>
+    <string name="home_report_incident">REPORT INCIDENT</string>
+    <string name="desc_map_placeholder">Map placeholder</string>
+
+    <string name="report_type_theft">Theft</string>
+    <string name="report_type_harassment">Harassment</string>
+    <string name="report_type_lighting">Poor Lighting</string>
+    <string name="report_location_1">Pasil Market area, Cebu City</string>
+    <string name="report_location_2">Duljo Fatima, near the barangay hall</string>
+    <string name="report_location_3">Colon St, near the old plaza</string>
+    <string name="report_time_1">2 hrs ago</string>
+    <string name="report_time_2">4 hrs ago</string>
+    <string name="report_time_3">6 hrs ago</string>
+
 </resources>
