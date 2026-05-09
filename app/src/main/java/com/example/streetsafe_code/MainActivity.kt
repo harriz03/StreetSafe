@@ -30,8 +30,12 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, HomeActivity::class.java))
                     finish()
                 }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Login failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                .addOnFailureListener { e ->
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("Firebase Error")
+                        .setMessage(e.message)
+                        .setPositiveButton("OK", null)
+                        .show()
                 }
         }
 

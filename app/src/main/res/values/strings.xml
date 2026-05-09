@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- ===== APP ===== -->
     <string name="app_name">StreetSafe</string>
     <string name="desc_shield_icon">Shield icon</string>
 
+    <!-- ===== BOTTOM NAV ===== -->
+    <string name="nav_home">Home</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- ===== LOGIN SCREEN ===== -->
     <string name="tagline">Stay aware. Stay protected.</string>
     <string name="label_sign_in_heading">Sign in to your account</string>
     <string name="label_username">USERNAME</string>
@@ -13,7 +21,9 @@
     <string name="btn_sign_in">SIGN IN</string>
     <string name="btn_create_account">CREATE ACCOUNT</string>
     <string name="label_or_divider">or</string>
+    <string name="btn_back">← Back</string>
 
+    <!-- ===== SIGN UP SCREEN ===== -->
     <string name="signup_tagline">Create your account today.</string>
     <string name="signup_heading">Create a new account</string>
     <string name="label_email">EMAIL</string>
@@ -23,6 +33,7 @@
     <string name="btn_sign_up">SIGN UP</string>
     <string name="btn_back_to_login">BACK TO LOGIN</string>
 
+    <!-- ===== HOME SCREEN ===== -->
     <string name="home_greeting">Good morning,</string>
     <string name="home_stay_safe">Stay safe today.</string>
     <string name="home_safe_route_title">Safe Route Suggestion</string>
@@ -38,14 +49,59 @@
     <string name="home_report_incident">REPORT INCIDENT</string>
     <string name="desc_map_placeholder">Map placeholder</string>
 
+    <!-- ===== REPORT INCIDENT SCREEN ===== -->
+    <string name="report_screen_tagline">Help keep your community safe.</string>
+    <string name="report_heading">Submit a new report</string>
+    <string name="label_incident_type">INCIDENT TYPE</string>
+    <string name="label_location">LOCATION</string>
+    <string name="label_description">DESCRIPTION</string>
+    <string name="hint_location">e.g. Colon St, Cebu City</string>
+    <string name="hint_description">Briefly describe what happened…</string>
+    <string name="btn_submit_report">SUBMIT REPORT</string>
+
+    <!-- ===== MAP SCREEN ===== -->
+    <string name="map_screen_title">Risk Map</string>
+    <string name="map_screen_subtitle">Cebu City, Philippines</string>
+    <string name="map_placeholder">Map will display here.\nCentered on Cebu City.</string>
+    <string name="map_legend_title">Risk Level</string>
+    <string name="legend_high">High Risk</string>
+    <string name="legend_medium">Medium Risk</string>
+    <string name="legend_low">Low Risk</string>
+
+    <!-- ===== ALL REPORTS SCREEN ===== -->
+    <string name="all_reports_title">All Reports</string>
+    <string name="all_reports_subtitle">Cebu City, Philippines</string>
+
+    <!-- ===== PROFILE SCREEN ===== -->
+    <string name="profile_info_heading">Account Information</string>
+    <string name="profile_avatar_initial">U</string>
+    <string name="profile_name">Juan dela Cruz</string>
+    <string name="profile_email">juan@email.com</string>
+    <string name="profile_username">juan_dc</string>
+    <string name="profile_reports_label">REPORTS SUBMITTED</string>
+    <string name="profile_reports_count">3 reports</string>
+    <string name="btn_logout">LOG OUT</string>
+
+    <!-- ===== REPORT CARDS (sample data) ===== -->
     <string name="report_type_theft">Theft</string>
     <string name="report_type_harassment">Harassment</string>
     <string name="report_type_lighting">Poor Lighting</string>
+    <string name="report_type_suspicious">Suspicious Activity</string>
+    <string name="report_type_accident">Road Accident</string>
     <string name="report_location_1">Pasil Market area, Cebu City</string>
     <string name="report_location_2">Duljo Fatima, near the barangay hall</string>
     <string name="report_location_3">Colon St, near the old plaza</string>
+    <string name="report_location_4">Carbon Market, Cebu City</string>
+    <string name="report_location_5">N. Bacalso Ave, Cebu City</string>
+    <string name="report_desc_1">Wallet was snatched near the fish section.</string>
+    <string name="report_desc_2">Group of men following female commuters at night.</string>
+    <string name="report_desc_3">Street lights have been out for several nights.</string>
+    <string name="report_desc_4">Unidentified individuals loitering near the entrance.</string>
+    <string name="report_desc_5">Motorcycle collision near the overpass, no ambulance yet.</string>
     <string name="report_time_1">2 hrs ago</string>
     <string name="report_time_2">4 hrs ago</string>
     <string name="report_time_3">6 hrs ago</string>
+    <string name="report_time_4">8 hrs ago</string>
+    <string name="report_time_5">10 hrs ago</string>
 
 </resources>

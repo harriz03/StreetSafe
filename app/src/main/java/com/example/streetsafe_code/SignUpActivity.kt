@@ -50,10 +50,12 @@ override fun onCreate(savedInstanceState: Bundle?) {
                 val user = hashMapOf(
                     "username" to username,
                     "email" to email,
-                    "created_at" to System.currentTimeMillis()
+                    "created_at" to System.currentTimeMillis(),
+                    "reportsCount" to 0
                 )
 
-                db.collection("users").document(uid)
+                db.collection("users")
+                    .document(uid)
                     .set(user)
                     .addOnSuccessListener {
                         Toast.makeText(this, "Signup successful", Toast.LENGTH_SHORT).show()

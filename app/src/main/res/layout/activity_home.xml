@@ -56,6 +56,18 @@
                         android:textStyle="bold"
                         android:letterSpacing="0.01" />
 
+                    <TextView
+                        android:id="@+id/txtViewProfile"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="View Profile"
+                        android:textColor="#C8E6C9"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -191,29 +203,11 @@
 
             </LinearLayout>
 
-            <FrameLayout
-                android:id="@+id/mapContainer"
+            <fragment
+                android:id="@+id/homeMapFragment"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
                 android:layout_width="match_parent"
-                android:layout_height="160dp"
-                android:background="#E8F5E9">
-
-                <LinearLayout
-                    android:id="@+id/mapPlaceholder"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/home_map_loading"
-                        android:textColor="#546E7A"
-                        android:textSize="12sp" />
-
-                </LinearLayout>
-
-            </FrameLayout>
+                android:layout_height="220dp"/>
 
         </LinearLayout>
 
@@ -267,7 +261,6 @@
 
             </LinearLayout>
 
-            <!-- ── Report Card 1: Theft ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -297,7 +290,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/report_type_theft"
+                        android:id="@+id/txtRecentType1"
+                        android:text="Loading..."
                         android:textColor="#B71C1C"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -306,7 +300,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/report_location_1"
+                        android:id="@+id/txtRecentLocation1"
+                        android:text="-"
                         android:textColor="#546E7A"
                         android:textSize="11sp" />
 
@@ -315,7 +310,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/report_time_1"
+                    android:id="@+id/txtRecentTime1"
+                    android:text="-"
                     android:textColor="#78909C"
                     android:textSize="11sp" />
 
@@ -350,7 +346,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/report_type_harassment"
+                        android:id="@+id/txtRecentType2"
+                        android:text="Loading..."
                         android:textColor="#E65100"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -359,7 +356,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/report_location_2"
+                        android:id="@+id/txtRecentLocation2"
+                        android:text="-"
                         android:textColor="#546E7A"
                         android:textSize="11sp" />
 
@@ -368,60 +366,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/report_time_2"
-                    android:textColor="#78909C"
-                    android:textSize="11sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:baselineAligned="false"
-                android:background="@drawable/bg_form_card"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="14dp"
-                android:layout_marginBottom="10dp"
-                android:elevation="4dp">
-
-                <View
-                    android:layout_width="4dp"
-                    android:layout_height="match_parent"
-                    android:background="#FFC107"
-                    android:layout_marginEnd="14dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/report_type_lighting"
-                        android:textColor="#F57F17"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="2dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/report_location_3"
-                        android:textColor="#546E7A"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/report_time_3"
+                    android:id="@+id/txtRecentTime2"
+                    android:text="-"
                     android:textColor="#78909C"
                     android:textSize="11sp" />
 
@@ -442,11 +388,6 @@
                 android:id="@+id/btnReportIncident"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:minHeight="56dp"
-                android:gravity="center"
-                android:textAllCaps="false"
-                android:paddingTop="0dp"
-                android:paddingBottom="0dp"
                 android:text="@string/home_report_incident"
                 android:textSize="14sp"
                 android:textStyle="bold"
