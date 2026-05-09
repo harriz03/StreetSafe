@@ -92,6 +92,10 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         FirebaseFirestore.getInstance()
             .collection("reports")
             .limit(3)
+            .orderBy(
+                "timestamp",
+                Query.Direction.DESCENDING
+            )
             .get()
             .addOnSuccessListener { docs ->
 
@@ -169,6 +173,11 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
         FirebaseFirestore.getInstance()
             .collection("reports")
+            .whereEqualTo("status", "ACTIVE")
+            .orderBy(
+                "timestamp",
+                Query.Direction.DESCENDING
+            )
             .get()
             .addOnSuccessListener { documents ->
 

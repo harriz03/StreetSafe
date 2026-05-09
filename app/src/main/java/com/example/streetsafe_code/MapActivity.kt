@@ -16,6 +16,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.firestore.FirebaseFirestore
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -54,35 +57,178 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             CameraUpdateFactory.newLatLngZoom(cebu, 12f)
         )
 
-        FirebaseFirestore.getInstance().collection("reports").get()
-            .addOnSuccessListener { documents ->
+        FirebaseFirestore.getInstance()
+            .collection("reports")
+            .whereEqualTo("status", "ACTIVE")
+            .get()
+            .addOnSuccessListener { docs ->
 
-                for (doc in documents) {
+                val groupedReports =
+                    mutableMapOf<String, MutableList<Report>>()
 
-                    val lat = doc.getDouble("latitude") ?: continue
-                    val lng = doc.getDouble("longitude") ?: continue
+                for (doc in docs) {
 
-                    val incident = doc.getString("incidentType") ?: "Incident"
+                    val report =
+                        doc.toObject(Report::class.java)
 
-                    val risk = doc.getString("riskLevel") ?: "LOW"
+                    val location = report.location
 
-                    val point = LatLng(lat, lng)
+                    if (groupedReports.containsKey(location)) {
 
-                    val markerColor = when (risk) {
+                        groupedReports[location]?.add(report)
 
-                        "HIGH" -> BitmapDescriptorFactory.HUE_RED
+                    } else {
 
-                        "MEDIUM" -> BitmapDescriptorFactory.HUE_ORANGE
+                        groupedReports[location] =
+                            mutableListOf(report)
+                    }
+                }
 
-                        else -> BitmapDescriptorFactory.HUE_GREEN
+                for ((location, reports) in groupedReports) {
+
+                    val firstReport = reports[0]
+
+                    val point = LatLng(
+                        firstReport.latitude,
+                        firstReport.longitude
+                    )
+
+                    var highestRisk = "LOW"
+
+                    for (report in reports) {
+
+                        if (report.riskLevel == "HIGH") {
+                            highestRisk = "HIGH"
+                            break
+                        }
+
+                        if (report.riskLevel == "MEDIUM"
+                            && highestRisk != "HIGH"
+                        ) {
+
+                            highestRisk = "MEDIUM"
+                        }
                     }
 
-                    googleMap.addMarker(
-                        MarkerOptions().position(point).title(incident).icon(
-                                BitmapDescriptorFactory.defaultMarker(markerColor)
+                    val markerColor = when (highestRisk) {
+
+                        "HIGH" ->
+                            BitmapDescriptorFactory.HUE_RED
+
+                        "MEDIUM" ->
+                            BitmapDescriptorFactory.HUE_ORANGE
+
+                        else ->
+                            BitmapDescriptorFactory.HUE_GREEN
+                    }
+
+                    val marker = googleMap.addMarker(
+
+                        MarkerOptions()
+                            .position(point)
+                            .title(location)
+                            .icon(
+                                BitmapDescriptorFactory
+                                    .defaultMarker(markerColor)
                             )
                     )
+
+                    marker?.tag = reports
+
+
+                    googleMap.setOnMarkerClickListener { marker ->
+
+                        val reports =
+                            marker.tag as MutableList<Report>
+
+                        val dialog =
+                            BottomSheetDialog(this)
+
+                        val view =
+                            layoutInflater.inflate(
+                                R.layout.dialog_incidents,
+                                null
+                            )
+
+                        val txtLocation =
+                            view.findViewById<TextView>(
+                                R.id.txtDialogLocation
+                            )
+
+                        val listIncidents =
+                            view.findViewById<ListView>(
+                                R.id.listIncidents
+                            )
+
+                        txtLocation.text = marker.title
+
+                        val adapter = object : ArrayAdapter<Report>(
+                            this,
+                            R.layout.item_incident,
+                            reports
+                        ){
+
+                            override fun getView(
+                                position: Int,
+                                convertView: android.view.View?,
+                                parent: android.view.ViewGroup
+                            ): android.view.View {
+
+                                val view = layoutInflater.inflate(
+                                    R.layout.item_incident,
+                                    parent,
+                                    false
+                                )
+
+                                val txtIncident =
+                                    view.findViewById<TextView>(
+                                        R.id.txtIncident
+                                    )
+
+                                val riskColor =
+                                    view.findViewById<android.view.View>(
+                                        R.id.viewRiskColor
+                                    )
+
+                                val report = reports[position]
+
+                                txtIncident.text =
+                                    "${report.incidentType} - ${report.riskLevel}"
+
+                                when(report.riskLevel){
+
+                                    "HIGH" -> {
+                                        riskColor.setBackgroundColor(
+                                            android.graphics.Color.RED
+                                        )
+                                    }
+
+                                    "MEDIUM" -> {
+                                        riskColor.setBackgroundColor(
+                                            android.graphics.Color.parseColor("#FF9800")
+                                        )
+                                    }
+
+                                    else -> {
+                                        riskColor.setBackgroundColor(
+                                            android.graphics.Color.GREEN
+                                        )
+                                    }
+                                }
+
+                                return view
+                            }
+                        }
+
+                        listIncidents.adapter = adapter
+
+                        dialog.setContentView(view)
+                        dialog.show()
+
+                        true
+                    }
                 }
             }
     }
 }
+

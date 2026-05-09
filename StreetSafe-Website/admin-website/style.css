@@ -1,0 +1,300 @@
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#F5F7FA;
+    color:#1F2937;
+}
+
+/* LOGIN */
+
+.login-body{
+    background:
+    linear-gradient(
+        135deg,
+        #E8F5E9,
+        #F5F7FA
+    );
+}
+
+.login-card{
+    width:420px;
+    background:white;
+    padding:45px;
+    border-radius:28px;
+    border:1px solid #E5E7EB;
+    box-shadow:
+    0 10px 40px rgba(0,0,0,0.08);
+}
+
+.shield-circle{
+    width:80px;
+    height:80px;
+    background:linear-gradient(
+        135deg,
+        #1B5E20,
+        #2E7D32
+    );
+    color:white;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:34px;
+    box-shadow:
+    0 8px 20px rgba(27,94,32,0.3);
+}
+
+.text-success-dark{
+    color:#1B5E20;
+}
+
+.custom-input{
+    border-radius:16px;
+    padding:14px;
+    border:1px solid #D1D5DB;
+    transition:0.2s;
+    font-size:15px;
+}
+
+.custom-input:focus{
+    border-color:#2E7D32;
+    box-shadow:
+    0 0 0 4px rgba(46,125,50,0.15);
+}
+
+.custom-btn{
+    border-radius:16px;
+    padding:14px;
+    font-weight:600;
+    background:#1B5E20;
+    border:none;
+    transition:0.2s;
+}
+
+.custom-btn:hover{
+    background:#2E7D32;
+    transform:translateY(-1px);
+}
+
+/* DASHBOARD */
+
+.dashboard-body{
+    background:#F4F7F9;
+}
+
+.sidebar{
+    width:270px;
+    min-height:100vh;
+    background:linear-gradient(
+        180deg,
+        #1B5E20,
+        #124418
+    );
+    padding:28px 20px;
+    position:fixed;
+    left:0;
+    top:0;
+}
+
+.sidebar-header{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.shield-circle-small{
+    width:70px;
+    height:70px;
+    background:rgba(255,255,255,0.12);
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+    color:white;
+}
+
+.sidebar-subtitle{
+    color:#C8E6C9;
+    font-size:14px;
+}
+
+.menu-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    text-decoration:none;
+    color:#E8F5E9;
+    padding:15px 18px;
+    border-radius:16px;
+    margin-bottom:12px;
+    transition:0.25s;
+    font-weight:500;
+}
+
+.menu-item:hover{
+    background:rgba(255,255,255,0.12);
+    transform:translateX(4px);
+    color:white;
+}
+
+.active-menu{
+    background:white;
+    color:#1B5E20;
+    font-weight:600;
+}
+
+.logout-btn{
+    background:#C62828;
+    color:white;
+}
+
+.logout-btn:hover{
+    background:#D32F2F;
+}
+
+.main-content{
+    margin-left:270px;
+    width:calc(100% - 270px);
+    padding:32px;
+}
+
+.top-header{
+    background:white;
+    border-radius:24px;
+    padding:28px;
+    box-shadow:
+    0 5px 20px rgba(0,0,0,0.05);
+}
+
+.stat-card{
+    border-radius:24px;
+    padding:28px;
+    color:white;
+    position:relative;
+    overflow:hidden;
+    transition:0.25s;
+}
+
+.stat-card:hover{
+    transform:translateY(-4px);
+}
+
+.stat-card h5{
+    opacity:0.9;
+    margin-bottom:10px;
+}
+
+.stat-card h2{
+    font-size:42px;
+    font-weight:700;
+}
+
+.high-risk-card{
+    background:linear-gradient(
+        135deg,
+        #D32F2F,
+        #B71C1C
+    );
+}
+
+.medium-risk-card{
+    background:linear-gradient(
+        135deg,
+        #FB8C00,
+        #EF6C00
+    );
+}
+
+.low-risk-card{
+    background:linear-gradient(
+        135deg,
+        #43A047,
+        #2E7D32
+    );
+}
+
+.table-card{
+    background:white;
+    border-radius:24px;
+    padding:28px;
+    box-shadow:
+    0 5px 20px rgba(0,0,0,0.05);
+}
+
+.table{
+    border-collapse:separate;
+    border-spacing:0 12px;
+}
+
+.table thead th{
+    border:none;
+    color:#6B7280;
+    font-size:14px;
+    font-weight:600;
+}
+
+.table tbody tr{
+    background:#F9FAFB;
+    border-radius:16px;
+    transition:0.2s;
+}
+
+.table tbody tr:hover{
+    background:#F3F4F6;
+}
+
+.table tbody td{
+    padding:18px;
+    border:none;
+    vertical-align:middle;
+}
+
+.risk-badge{
+    padding:8px 14px;
+    border-radius:30px;
+    color:white;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.5px;
+}
+
+.high-risk{
+    background:#D32F2F;
+}
+
+.medium-risk{
+    background:#FB8C00;
+}
+
+.low-risk{
+    background:#43A047;
+}
+
+.btn-success{
+    border-radius:12px;
+    padding:8px 16px;
+    font-weight:600;
+    border:none;
+    background:#1B5E20;
+}
+
+.btn-success:hover{
+    background:#2E7D32;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:991px){
+
+    .sidebar{
+        width:100%;
+        min-height:auto;
+        position:relative;
+    }
+
+    .main-content{
+        margin-left:0;
+        width:100%;
+    }
+
+}

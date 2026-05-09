@@ -105,6 +105,8 @@ class ReportActivity : AppCompatActivity() {
                 "latitude" to latitude,
                 "longitude" to longitude,
                 "riskLevel" to riskLevel,
+                "status" to "ACTIVE",
+
                 "timestamp" to System.currentTimeMillis()
             )
 

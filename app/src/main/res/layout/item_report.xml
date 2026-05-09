@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="14dp"
+    android:background="#FFFFFF">
+
+    <View
+        android:id="@+id/viewRisk"
+        android:layout_width="10dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="12dp"
+        android:background="#4CAF50"/>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtIncidentType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Incident"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#1B5E20"/>
+
+        <TextView
+            android:id="@+id/txtLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location"
+            android:textSize="13sp"
+            android:textColor="#546E7A"
+            android:layout_marginTop="2dp"/>
+
+        <TextView
+            android:id="@+id/txtRisk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HIGH"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
