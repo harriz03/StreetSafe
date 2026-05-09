@@ -11,6 +11,9 @@ import {
 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import { getAuth, signOut }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 
 const highCount =
     document.getElementById("highCount");
@@ -164,5 +167,31 @@ buttons.forEach((button) => {
 }
 
 
+
+
 // Start
 loadReports();
+
+const auth = getAuth();
+
+const logoutBtn =
+    document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener("click", async (e) => {
+
+    e.preventDefault();
+
+    try {
+
+        await signOut(auth);
+
+        alert("Logged out successfully");
+
+        window.location.href = "index.html";
+
+    } catch (error) {
+
+        alert("Logout failed");
+        console.log(error);
+    }
+});
