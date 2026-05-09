@@ -2,6 +2,7 @@ package com.example.streetsafe_code
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
@@ -65,9 +66,19 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             finish()
         }
 
-        findViewById<android.view.View>(R.id.cardSafeRoute).setOnClickListener {
-            startActivity(Intent(this, MapActivity::class.java))
-            finish()
+        val safeRoute =
+            findViewById<LinearLayout>(
+                R.id.cardSafeRoute
+            )
+
+        safeRoute.setOnClickListener {
+
+            startActivity(
+                Intent(
+                    this,
+                    SafeRouteActivity::class.java
+                )
+            )
         }
 
         findViewById<TextView>(R.id.txtViewProfile).setOnClickListener {

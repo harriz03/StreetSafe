@@ -18,6 +18,7 @@
         <activity android:name=".ReportActivity" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".AllReportsActivity" />
+        <activity android:name=".SafeRouteActivity"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">
