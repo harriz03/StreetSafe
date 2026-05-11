@@ -2,11 +2,13 @@ package com.example.streetsafe_code
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import android.app.ProgressDialog
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,29 +20,62 @@ class MainActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        val emailField = findViewById<EditText>(R.id.editUsername)
+        // Auto-redirect if already logged in
+        if (auth.currentUser != null) {
+            navigateToHome()
+            return
+        }
+
+        val emailField    = findViewById<EditText>(R.id.editUsername)
         val passwordField = findViewById<EditText>(R.id.editPassword)
+        val rootView      = findViewById<View>(android.R.id.content)
 
         findViewById<AppCompatButton>(R.id.btnLogin).setOnClickListener {
-            val email = emailField.text.toString().trim()
+            val email    = emailField.text.toString().trim()
             val password = passwordField.text.toString().trim()
+
+            if (email.isEmpty()) {
+                emailField.error = "Email is required"
+                emailField.requestFocus()
+                return@setOnClickListener
+            }
+            if (password.isEmpty()) {
+                passwordField.error = "Password is required"
+                passwordField.requestFocus()
+                return@setOnClickListener
+            }
+
+            val progress = ProgressDialog(this).apply {
+                setMessage("Signing in\u2026")
+                setCancelable(false)
+                show()
+            }
 
             auth.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener {
-                    startActivity(Intent(this, HomeActivity::class.java))
-                    finish()
+                    progress.dismiss()
+                    navigateToHome()
                 }
                 .addOnFailureListener { e ->
-                    androidx.appcompat.app.AlertDialog.Builder(this)
-                        .setTitle("Firebase Error")
-                        .setMessage(e.message)
-                        .setPositiveButton("OK", null)
-                        .show()
+                    progress.dismiss()
+                    val msg = when {
+                        e.message?.contains("password", true) == true ->
+                            "Incorrect password. Please try again."
+                        e.message?.contains("no user", true) == true ->
+                            "No account found with this email."
+                        else -> e.message ?: "Login failed. Please try again."
+                    }
+                    Snackbar.make(rootView, msg, Snackbar.LENGTH_LONG).show()
                 }
         }
 
         findViewById<AppCompatButton>(R.id.btnSignUp).setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
+    }
+
+    private fun navigateToHome() {
+        startActivity(Intent(this, HomeActivity::class.java))
+        finish()
     }
 }
