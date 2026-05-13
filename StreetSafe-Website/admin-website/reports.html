@@ -3,228 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreetSafe Admin — Reports</title>
+    <title>StreetSafe — Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── Tab navigation ── */
+        .section-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .section-tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 1.5px solid #c8e6c9;
+            background: #fff;
+            color: #2e7d32;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all .15s;
+            position: relative;
+        }
+        .section-tab.active {
+            background: #2e7d32;
+            color: #fff;
+            border-color: #2e7d32;
+        }
+        .section-tab:hover:not(.active) {
+            background: #f1f8e9;
+        }
+        .tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ff7043;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            margin-left: 6px;
+            line-height: 1;
+        }
+        .section-tab.active .tab-badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ── Pending cards grid ── */
+        .pending-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .pending-card {
+            background: #fff;
+            border: 1.5px solid #e8f5e9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            transition: box-shadow .15s;
+        }
+        .pending-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+        }
+
+        /* Photo thumbnail */
+        .pending-photo {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            background: #f1f8e9;
+            cursor: pointer;
+        }
+        .pending-photo-placeholder {
+            width: 100%;
+            height: 180px;
+            background: #f1f8e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        /* Card body */
+        .pending-body {
+            padding: 16px;
+        }
+        .pending-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .pending-incident {
+            font-weight: 700;
+            font-size: 15px;
+            color: #1b5e20;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pending-location {
+            font-size: 13px;
+            color: #546e7a;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        .pending-description {
+            font-size: 13px;
+            color: #37474f;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .pending-date {
+            font-size: 11px;
+            color: #90a4ae;
+            margin-bottom: 14px;
+        }
+
+        /* Approve / Reject buttons */
+        .pending-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-approve {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: #2e7d32;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background .15s, opacity .15s;
+        }
+        .btn-approve:hover { background: #1b5e20; }
+        .btn-approve:disabled { opacity: .5; cursor: default; }
+
+        .btn-reject {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1.5px solid #ef5350;
+            background: #fff;
+            color: #ef5350;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background .15s, color .15s, opacity .15s;
+        }
+        .btn-reject:hover { background: #ffebee; }
+        .btn-reject:disabled { opacity: .5; cursor: default; }
+
+        /* Rejection note input */
+        .reject-note-wrap {
+            display: none;
+            margin-top: 10px;
+        }
+        .reject-note-wrap textarea {
+            width: 100%;
+            border: 1.5px solid #ef9a9a;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #37474f;
+            resize: none;
+            outline: none;
+        }
+        .reject-note-wrap textarea:focus {
+            border-color: #ef5350;
+        }
+        .btn-confirm-reject {
+            margin-top: 6px;
+            width: 100%;
+            padding: 7px;
+            border-radius: 8px;
+            border: none;
+            background: #ef5350;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-confirm-reject:hover { background: #c62828; }
+
+        /* Empty states */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #90a4ae;
+        }
+        .empty-state .empty-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+        .empty-state p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Active table date column */
+        .table th, .table td { vertical-align: middle; }
+
+        /* Photo lightbox overlay */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.85);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+        #lightbox.open { display: flex; }
+        #lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        #lightboxClose {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+            user-select: none;
+        }
+    </style>
 </head>
 <body class="dashboard-body">
 
-<!-- Toast Container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
-    <div id="mainToast" class="toast align-items-center text-white border-0" role="alert">
-        <div class="d-flex">
-            <div class="toast-body fw-semibold" id="toastMessage"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    </div>
-</div>
-
-<!-- Resolve Confirmation Modal -->
-<div class="modal fade" id="resolveModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Mark as Resolved?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted mb-1">You are about to resolve:</p>
-                <div class="resolve-preview p-3 rounded-3 bg-light mt-2">
-                    <strong id="resolveIncidentType"></strong>
-                    <div class="text-muted small mt-1" id="resolveLocation"></div>
-                </div>
-                <p class="small text-muted mt-3 mb-0">This will remove it from the active reports list.</p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success rounded-3 px-4 fw-semibold" id="confirmResolveBtn">Yes, Resolve</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Description Modal -->
-<div class="modal fade" id="descriptionModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <div>
-                    <h5 class="modal-title fw-bold" id="descIncidentType"></h5>
-                    <span class="risk-badge small" id="descRiskBadge"></span>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <div class="text-muted small fw-semibold text-uppercase mb-1">Location</div>
-                    <div id="descLocation" class="fw-medium"></div>
-                </div>
-                <div class="mb-3">
-                    <div class="text-muted small fw-semibold text-uppercase mb-1">Reported At</div>
-                    <div id="descTimestamp" class="fw-medium"></div>
-                </div>
-                <div>
-                    <div class="text-muted small fw-semibold text-uppercase mb-1">Description</div>
-                    <div id="descDescription" class="fw-medium text-dark"></div>
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Logout Confirmation Modal -->
-<div class="modal fade" id="logoutModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-body text-center p-4">
-                <div class="fs-1 mb-2">🚪</div>
-                <h6 class="fw-bold mb-1">Log out?</h6>
-                <p class="text-muted small mb-4">You'll need to sign in again to access the admin panel.</p>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-light rounded-3 w-50" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger rounded-3 w-50 fw-semibold" id="confirmLogoutBtn">Log Out</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Photo lightbox -->
+<div id="lightbox" onclick="closeLightbox()">
+    <span id="lightboxClose" onclick="closeLightbox()">✕</span>
+    <img id="lightboxImg" src="" alt="Incident photo">
 </div>
 
 <div class="d-flex">
 
-    <!-- Sidebar -->
+    <!-- ── Sidebar ── -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="shield-circle-small mb-3 mx-auto">🛡</div>
-            <h4 class="fw-bold text-white mb-0">StreetSafe</h4>
+            <div class="shield-circle-small mb-3">🛡</div>
+            <h4 class="fw-bold text-white">StreetSafe</h4>
             <p class="sidebar-subtitle">Admin Panel</p>
         </div>
-
         <div class="sidebar-menu mt-4">
-            <a href="#" class="menu-item active-menu" id="menuActive">
+            <a href="#" class="menu-item active-menu">
                 <span>📋</span> Incident Reports
             </a>
-            <a href="#" class="menu-item mt-auto" id="logoutBtn">
-                <span>🚪</span> Logout
+            <a href="#" id="logoutBtn" class="menu-item logout-btn mt-5">
+                Logout
             </a>
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- ── Main content ── -->
     <div class="main-content">
 
-        <!-- Top Header -->
-        <div class="top-header shadow-sm d-flex justify-content-between align-items-center">
+        <!-- Top header -->
+        <div class="top-header shadow-sm">
             <div>
                 <h3 class="fw-bold text-success-dark mb-1">Incident Reports</h3>
-                <p class="text-muted mb-0 small">Manage active incidents and resolve reports</p>
-            </div>
-            <div class="admin-badge">
-                <span class="online-dot"></span>
-                <span id="adminEmail" class="small fw-semibold text-muted">Admin</span>
+                <p class="text-muted mb-0">Review pending reports and manage active incidents</p>
             </div>
         </div>
 
-        <!-- Stat Cards -->
-        <div class="row mt-4 g-3">
+        <!-- Stat cards -->
+        <div class="row mt-4 g-4">
             <div class="col-md-3">
-                <div class="stat-card total-card shadow-sm">
-                    <div class="stat-icon">📊</div>
-                    <h5>Total Active</h5>
-                    <h2 id="totalCount">—</h2>
+                <div class="stat-card shadow-sm" style="border-left: 4px solid #ff7043; background:#fff3e0;">
+                    <h5 style="color:#bf360c;">Pending Review</h5>
+                    <h2 id="pendingCount" style="color:#bf360c;">0</h2>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card high-risk-card shadow-sm">
-                    <div class="stat-icon">🔴</div>
                     <h5>High Risk</h5>
-                    <h2 id="highCount">—</h2>
+                    <h2 id="highCount">0</h2>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card medium-risk-card shadow-sm">
-                    <div class="stat-icon">🟠</div>
                     <h5>Medium Risk</h5>
-                    <h2 id="mediumCount">—</h2>
+                    <h2 id="mediumCount">0</h2>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card low-risk-card shadow-sm">
-                    <div class="stat-icon">🟢</div>
                     <h5>Low Risk</h5>
-                    <h2 id="lowCount">—</h2>
+                    <h2 id="lowCount">0</h2>
                 </div>
             </div>
         </div>
 
-        <!-- Reports Table -->
-        <div class="table-card shadow-sm mt-4">
-
-            <!-- Tabs + Search row -->
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-                <ul class="nav nav-tabs-custom mb-0" id="reportTabs">
-                    <li class="nav-item">
-                        <button class="tab-btn active-tab" id="tabActive" onclick="switchTab('active')">
-                            Active <span class="tab-count" id="activeTabCount">0</span>
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="tab-btn" id="tabResolved" onclick="switchTab('resolved')">
-                            Resolved <span class="tab-count resolved-count" id="resolvedTabCount">0</span>
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="d-flex gap-2 align-items-center">
-                    <select id="riskFilter" class="form-select form-select-sm filter-select">
-                        <option value="">All Risk Levels</option>
-                        <option value="HIGH">High Risk</option>
-                        <option value="MEDIUM">Medium Risk</option>
-                        <option value="LOW">Low Risk</option>
-                    </select>
-                    <input type="text" id="searchInput" class="form-control form-control-sm search-input"
-                        placeholder="🔍  Search incident or location…">
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table align-middle" id="reportsTable">
-                    <thead>
-                        <tr>
-                            <th>Incident</th>
-                            <th>Location</th>
-                            <th>Risk Level</th>
-                            <th>Reported At</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportsTableBody">
-                        <tr id="loadingRow">
-                            <td colspan="5" class="text-center py-5">
-                                <div class="spinner-border text-success" role="status"></div>
-                                <div class="text-muted small mt-2">Loading reports…</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Empty state (hidden by default) -->
-            <div id="emptyState" class="empty-state d-none">
-                <div class="fs-1">📭</div>
-                <h6 class="fw-bold mt-2">No reports found</h6>
-                <p class="text-muted small">No incidents match your current filters.</p>
-            </div>
-
+        <!-- Section tabs -->
+        <div class="section-tabs mt-4">
+            <button class="section-tab active" id="tabPending" onclick="switchTab('pending')">
+                ⏳ Pending Approval
+                <span class="tab-badge" id="pendingBadge">0</span>
+            </button>
+            <button class="section-tab" id="tabActive" onclick="switchTab('active')">
+                ✅ Active Incidents
+            </button>
         </div>
 
-    </div>
-</div>
+        <!-- ── PENDING SECTION ── -->
+        <div id="sectionPending">
+            <div id="pendingGrid" class="pending-grid">
+                <!-- Cards injected by JS -->
+            </div>
+            <div id="pendingEmpty" class="empty-state" style="display:none;">
+                <div class="empty-icon">🎉</div>
+                <p>No reports waiting for approval.</p>
+            </div>
+        </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- ── ACTIVE SECTION ── -->
+        <div id="sectionActive" style="display:none;">
+            <div class="table-card shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-success-dark mb-0">Active Incident Reports</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Incident</th>
+                                <th>Location</th>
+                                <th>Risk Level</th>
+                                <th>Reported</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="activeEmpty" class="empty-state" style="display:none;">
+                    <div class="empty-icon">📭</div>
+                    <p>No active incidents right now.</p>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /main-content -->
+</div><!-- /d-flex -->
+
 <script type="module" src="reports.js"></script>
 </body>
 </html>

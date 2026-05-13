@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- ── Green header ── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -37,7 +38,7 @@
                     android:layout_height="36dp"
                     android:src="@drawable/shield_icon"
                     android:contentDescription="@string/desc_shield_icon"
-                    app:tint="#FFFFFF" />
+                    app:tint="#FFFFFF"/>
 
             </LinearLayout>
 
@@ -49,17 +50,18 @@
                 android:textSize="28sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.03"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="4dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/report_screen_tagline"
                 android:textColor="#C8E6C9"
-                android:textSize="13sp" />
+                android:textSize="13sp"/>
 
         </LinearLayout>
 
+        <!-- ── Form card ── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,8 +84,9 @@
                 android:textSize="17sp"
                 android:textStyle="bold"
                 android:textColor="#1B5E20"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="24dp"/>
 
+            <!-- ── INCIDENT TYPE ── -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -92,7 +95,7 @@
                 android:textStyle="bold"
                 android:textColor="#1B5E20"
                 android:letterSpacing="0.10"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -104,7 +107,7 @@
                 <View
                     android:layout_width="4dp"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_input_accent" />
+                    android:background="@drawable/bg_input_accent"/>
 
                 <Spinner
                     android:id="@+id/spinnerIncidentType"
@@ -114,10 +117,11 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="#1B5E20"
-                    android:background="@android:color/transparent" />
+                    android:background="@android:color/transparent"/>
 
             </LinearLayout>
 
+            <!-- ── LOCATION ── -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -126,36 +130,54 @@
                 android:textStyle="bold"
                 android:textColor="#1B5E20"
                 android:letterSpacing="0.10"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:orientation="horizontal"
                 android:background="@drawable/bg_input_field_enhanced"
-                android:layout_marginBottom="20dp">
+                android:layout_marginBottom="8dp">
 
                 <View
                     android:layout_width="4dp"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_input_accent" />
+                    android:background="@drawable/bg_input_accent"/>
 
                 <EditText
                     android:id="@+id/editLocation"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:hint="@string/hint_location"
+                    android:hint="Tap to search for a location…"
                     android:textColor="#1B5E20"
                     android:textColorHint="#78909C"
-                    android:textSize="15sp"
+                    android:textSize="14sp"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:inputType="text"
-                    android:background="@android:color/transparent" />
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:cursorVisible="false"
+                    android:background="@android:color/transparent"/>
 
             </LinearLayout>
 
+            <!-- Use My Location button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnUseMyLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="📍 Use My Location"
+                android:textSize="12sp"
+                android:textColor="#1B5E20"
+                android:background="@drawable/bg_button_secondary"
+                android:stateListAnimator="@null"
+                android:layout_marginBottom="20dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"/>
+
+            <!-- ── DESCRIPTION ── -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -164,19 +186,19 @@
                 android:textStyle="bold"
                 android:textColor="#1B5E20"
                 android:letterSpacing="0.10"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:background="@drawable/bg_input_field_enhanced"
-                android:layout_marginBottom="28dp">
+                android:layout_marginBottom="24dp">
 
                 <View
                     android:layout_width="4dp"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_input_accent" />
+                    android:background="@drawable/bg_input_accent"/>
 
                 <EditText
                     android:id="@+id/editDescription"
@@ -194,10 +216,69 @@
                     android:minHeight="100dp"
                     android:inputType="textMultiLine"
                     android:gravity="top"
-                    android:background="@android:color/transparent" />
+                    android:background="@android:color/transparent"/>
 
             </LinearLayout>
 
+            <!-- ── PHOTO EVIDENCE ── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="PHOTO EVIDENCE"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#1B5E20"
+                android:letterSpacing="0.10"
+                android:layout_marginBottom="6dp"/>
+
+            <TextView
+                android:id="@+id/txtPhotoHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="At least one photo is required to submit a report."
+                android:textSize="12sp"
+                android:textColor="#78909C"
+                android:layout_marginBottom="10dp"/>
+
+            <!-- Photo preview — hidden until a photo is chosen -->
+            <ImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:scaleType="centerCrop"
+                android:background="#E8F5E9"
+                android:layout_marginBottom="10dp"
+                android:visibility="gone"
+                android:contentDescription="Selected photo preview"/>
+
+            <!-- Add Photo button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnAddPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="📷 Add Photo"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1B5E20"
+                android:letterSpacing="0.05"
+                android:background="@drawable/bg_button_secondary"
+                android:stateListAnimator="@null"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Upload progress bar -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:max="100"
+                android:progress="0"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp"
+                android:progressTint="#2E7D32"
+                android:progressBackgroundTint="#C8E6C9"/>
+
+            <!-- Submit button -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnSubmitReport"
                 android:layout_width="match_parent"
@@ -209,8 +290,9 @@
                 android:letterSpacing="0.08"
                 android:background="@drawable/bg_button_primary"
                 android:stateListAnimator="@null"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"/>
 
+            <!-- Divider -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -222,7 +304,7 @@
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#E8F5E9" />
+                    android:background="#E8F5E9"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -231,16 +313,17 @@
                     android:textSize="11sp"
                     android:textColor="#546E7A"
                     android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
+                    android:paddingEnd="8dp"/>
 
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_weight="1"
-                    android:background="#E8F5E9" />
+                    android:background="#E8F5E9"/>
 
             </LinearLayout>
 
+            <!-- Back button -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnBackFromReport"
                 android:layout_width="match_parent"
@@ -251,7 +334,7 @@
                 android:textColor="#1B5E20"
                 android:letterSpacing="0.05"
                 android:background="@drawable/bg_button_secondary"
-                android:stateListAnimator="@null" />
+                android:stateListAnimator="@null"/>
 
         </LinearLayout>
 

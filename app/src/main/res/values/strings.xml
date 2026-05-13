@@ -103,5 +103,6 @@
     <string name="report_time_3">6 hrs ago</string>
     <string name="report_time_4">8 hrs ago</string>
     <string name="report_time_5">10 hrs ago</string>
+    <string name="google_maps_key">AIzaSyDYAXWAcTbJ2sQDN-yIKfZCX5-xdNoSxgA</string>
 
 </resources>
