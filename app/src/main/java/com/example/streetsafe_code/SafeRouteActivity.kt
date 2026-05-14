@@ -1,12 +1,13 @@
 package com.example.streetsafe_code
 
 import android.Manifest
-import android.app.Activity
-import android.content.Intent
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Geocoder
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -18,16 +19,12 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.model.RectangularBounds
-import com.google.android.libraries.places.widget.Autocomplete
-import com.google.android.libraries.places.widget.AutocompleteActivity
-import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
+import java.net.URLEncoder
 import java.util.Locale
 
 class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -38,6 +35,10 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
     private var destinationLatLng: LatLng? = null
     private var destinationName: String    = ""
 
+    // Debounce jobs — cancel previous search before starting a new one
+    private var originSearchJob: Job?      = null
+    private var destSearchJob: Job?        = null
+
     // ── Views ─────────────────────────────────────────────────────────────────
     private lateinit var googleMap: GoogleMap
     private lateinit var editOrigin: EditText
@@ -47,19 +48,14 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var txtRouteResult: TextView
     private lateinit var progressBar: ProgressBar
 
+    // ── Coroutine scope ───────────────────────────────────────────────────────
+    private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
     companion object {
-        private const val RC_ORIGIN      = 201
-        private const val RC_DESTINATION = 202
-        private const val RC_LOCATION    = 203
-
-        // Cebu bounding box for autocomplete restriction
-        private val CEBU_BOUNDS = RectangularBounds.newInstance(
-            LatLng(9.8,  123.6),
-            LatLng(10.8, 124.3)
-        )
-
-        // Danger radius in metres around each HIGH-risk incident
+        private const val RC_LOCATION     = 203
         private const val HAZARD_RADIUS_M = 200.0
+        private const val SEARCH_DELAY_MS = 600L
+        private const val ORS_API_KEY     = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijc0MGQ4YWRkNTE3ZTQzNmNhYjdiYzc5ZjJhYzU2ZTA5IiwiaCI6Im11cm11cjY0In0=" // replace with your key
     }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -67,72 +63,123 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_safe_route)
 
-        if (!Places.isInitialized()) {
-            Places.initialize(applicationContext, getString(R.string.google_maps_key))
-        }
-
-        bindViews()
-        setupOriginField()
-        setupDestinationField()
-        setupUseMyLocation()
-        setupFindRouteButton()
-        setupBackButton()
-
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.safeRouteMap) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-    }
-
-    // ── View binding ──────────────────────────────────────────────────────────
-    private fun bindViews() {
         editOrigin       = findViewById(R.id.editOrigin)
         editDestination  = findViewById(R.id.editDestination)
         btnUseMyLocation = findViewById(R.id.btnUseMyLocation)
         btnFindRoute     = findViewById(R.id.btnFindRoute)
         txtRouteResult   = findViewById(R.id.txtRouteResult)
         progressBar      = findViewById(R.id.progressBar)
+
+        setupOriginField()
+        setupDestinationField()
+        setupUseMyLocation()
+        setupFindRouteButton()
+        findViewById<AppCompatButton>(R.id.btnBack).setOnClickListener { finish() }
+
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.safeRouteMap) as SupportMapFragment
+        mapFragment.getMapAsync(this)
     }
 
-    // ── Places Autocomplete ───────────────────────────────────────────────────
+    override fun onDestroy() {
+        super.onDestroy()
+        activityScope.cancel()
+    }
+
+    // ── Map ───────────────────────────────────────────────────────────────────
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.3167, 123.8907), 12f))
+        googleMap.uiSettings.isZoomControlsEnabled = true
+    }
+
+    // ── Nominatim Search (debounced) ──────────────────────────────────────────
     private fun setupOriginField() {
-        editOrigin.isFocusable = false
-        editOrigin.setOnClickListener { launchAutocomplete(RC_ORIGIN) }
+        editOrigin.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s?.toString()?.trim() ?: return
+                if (query == originName && originLatLng != null) return
+                originLatLng = null
+
+                originSearchJob?.cancel()
+                if (query.length < 3) return
+                originSearchJob = activityScope.launch {
+                    delay(SEARCH_DELAY_MS)
+                    if (editOrigin.hasFocus()) searchLocation(query, isOrigin = true)
+                }
+            }
+        })
     }
 
     private fun setupDestinationField() {
-        editDestination.isFocusable = false
-        editDestination.setOnClickListener { launchAutocomplete(RC_DESTINATION) }
+        editDestination.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s?.toString()?.trim() ?: return
+                if (query == destinationName && destinationLatLng != null) return
+                destinationLatLng = null
+
+                destSearchJob?.cancel()
+                if (query.length < 3) return
+                destSearchJob = activityScope.launch {
+                    delay(SEARCH_DELAY_MS)
+                    if (editDestination.hasFocus()) searchLocation(query, isOrigin = false)
+                }
+            }
+        })
     }
 
-    private fun launchAutocomplete(requestCode: Int) {
-        val fields = listOf(Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS)
-        val intent = Autocomplete
-            .IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
-            .setLocationRestriction(CEBU_BOUNDS)
-            .build(this)
-        @Suppress("DEPRECATION")
-        startActivityForResult(intent, requestCode)
-    }
+    private fun searchLocation(query: String, isOrigin: Boolean) {
+        activityScope.launch {
+            try {
+                val encoded  = URLEncoder.encode("$query, Cebu, Philippines", "UTF-8")
+                val url      = "https://nominatim.openstreetmap.org/search?q=$encoded&format=json&limit=5&countrycodes=ph"
+                val response = withContext(Dispatchers.IO) {
+                    val conn = URL(url).openConnection()
+                    conn.setRequestProperty("User-Agent", "StreetSafeApp/1.0")
+                    conn.connect()
+                    conn.getInputStream().bufferedReader().readText()
+                }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when {
-            resultCode == Activity.RESULT_OK && requestCode == RC_ORIGIN -> {
-                val place = Autocomplete.getPlaceFromIntent(data!!)
-                originLatLng = place.latLng
-                originName   = place.name ?: place.address ?: ""
-                editOrigin.setText(originName)
-            }
-            resultCode == Activity.RESULT_OK && requestCode == RC_DESTINATION -> {
-                val place = Autocomplete.getPlaceFromIntent(data!!)
-                destinationLatLng = place.latLng
-                destinationName   = place.name ?: place.address ?: ""
-                editDestination.setText(destinationName)
-            }
-            resultCode == AutocompleteActivity.RESULT_ERROR -> {
-                val status = Autocomplete.getStatusFromIntent(data!!)
-                Toast.makeText(this, "Search error: ${status.statusMessage}", Toast.LENGTH_SHORT).show()
+                val results = JSONArray(response)
+                if (results.length() == 0) return@launch
+
+                val currentField = if (isOrigin) editOrigin else editDestination
+                if (!currentField.hasFocus() || currentField.text.toString().trim().length < 3) return@launch
+
+                val names = Array(results.length()) { i ->
+                    results.getJSONObject(i).getString("display_name")
+                        .split(",").take(3).joinToString(", ")
+                }
+
+                AlertDialog.Builder(this@SafeRouteActivity)
+                    .setTitle(if (isOrigin) "Select Starting Point" else "Select Destination")
+                    .setItems(names) { _, index ->
+                        val place = results.getJSONObject(index)
+                        val lat   = place.getString("lat").toDouble()
+                        val lng   = place.getString("lon").toDouble()
+                        val name  = names[index]
+
+                        if (isOrigin) {
+                            originLatLng = LatLng(lat, lng)
+                            originName   = name
+                            editOrigin.setText(name)
+                            editOrigin.clearFocus()
+                        } else {
+                            destinationLatLng = LatLng(lat, lng)
+                            destinationName   = name
+                            editDestination.setText(name)
+                            editDestination.clearFocus()
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+
+            } catch (e: Exception) {
+                // Silent — user can keep typing
             }
         }
     }
@@ -140,14 +187,11 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
     // ── Use My Location ───────────────────────────────────────────────────────
     private fun setupUseMyLocation() {
         btnUseMyLocation.setOnClickListener {
-            if (ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    RC_LOCATION
+                    this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), RC_LOCATION
                 )
             } else {
                 fetchCurrentLocation()
@@ -166,19 +210,17 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun fetchCurrentLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
         ) return
 
         btnUseMyLocation.isEnabled = false
-        btnUseMyLocation.text = "Getting location…"
+        btnUseMyLocation.text      = "Getting location…"
 
-        LocationServices.getFusedLocationProviderClient(this)
-            .lastLocation
+        LocationServices.getFusedLocationProviderClient(this).lastLocation
             .addOnSuccessListener { location ->
                 btnUseMyLocation.isEnabled = true
-                btnUseMyLocation.text      = "📍 Use My Location as Start"
+                btnUseMyLocation.text      = "📍 Use My Location"
 
                 if (location == null) {
                     Toast.makeText(this, "Could not get location. Try again.", Toast.LENGTH_SHORT).show()
@@ -186,52 +228,39 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
 
                 originLatLng = LatLng(location.latitude, location.longitude)
-
                 try {
-                    val geo     = Geocoder(this, Locale.getDefault())
                     @Suppress("DEPRECATION")
-                    val results = geo.getFromLocation(location.latitude, location.longitude, 1)
-                    originName  = results?.firstOrNull()?.getAddressLine(0)
+                    val results = Geocoder(this, Locale.getDefault())
+                        .getFromLocation(location.latitude, location.longitude, 1)
+                    originName = results?.firstOrNull()?.getAddressLine(0)
                         ?: "%.5f, %.5f".format(location.latitude, location.longitude)
                 } catch (e: Exception) {
                     originName = "%.5f, %.5f".format(location.latitude, location.longitude)
                 }
 
                 editOrigin.setText(originName)
+                editOrigin.clearFocus()
                 Toast.makeText(this, "Start set to your current location", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener {
                 btnUseMyLocation.isEnabled = true
-                btnUseMyLocation.text      = "📍 Use My Location as Start"
+                btnUseMyLocation.text      = "📍 Use My Location"
                 Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show()
             }
     }
 
-    // ── Map ready ─────────────────────────────────────────────────────────────
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-        googleMap.moveCamera(
-            CameraUpdateFactory.newLatLngZoom(LatLng(10.3167, 123.8907), 12f)
-        )
-        googleMap.uiSettings.isZoomControlsEnabled = true
-    }
-
-    // ── Find Route button ─────────────────────────────────────────────────────
+    // ── Find Route ────────────────────────────────────────────────────────────
     private fun setupFindRouteButton() {
         btnFindRoute.setOnClickListener {
             val origin = originLatLng
             val dest   = destinationLatLng
 
             if (origin == null) {
-                Toast.makeText(this, "Please set a starting point", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please select a starting point from the suggestions", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (dest == null) {
-                Toast.makeText(this, "Please set a destination", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (origin == dest) {
-                Toast.makeText(this, "Start and destination cannot be the same", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please select a destination from the suggestions", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -239,233 +268,305 @@ class SafeRouteActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // ── Step 1: load HIGH-risk incidents from Firestore ───────────────────────
+    // ── Step 1: Load hazards from Firestore ───────────────────────────────────
     private fun fetchHazardsThenRoute(origin: LatLng, destination: LatLng) {
         setLoading(true)
         txtRouteResult.text = "Loading hazard data…"
 
+        // FIX: also load MEDIUM risk for map display (shown as yellow circles)
         FirebaseFirestore.getInstance()
             .collection("reports")
-            .whereEqualTo("status",    "ACTIVE")
-            .whereEqualTo("riskLevel", "HIGH")
+            .whereEqualTo("status", "ACTIVE")
             .get()
             .addOnSuccessListener { docs ->
-                val hazards = docs.mapNotNull { doc ->
-                    val lat = doc.getDouble("latitude")  ?: return@mapNotNull null
-                    val lng = doc.getDouble("longitude") ?: return@mapNotNull null
-                    LatLng(lat, lng)
+                val highHazards = mutableListOf<LatLng>()
+                val mediumHazards = mutableListOf<LatLng>()
+
+                for (doc in docs) {
+                    val lat   = doc.getDouble("latitude")  ?: continue
+                    val lng   = doc.getDouble("longitude") ?: continue
+                    val risk  = doc.getString("riskLevel") ?: continue
+                    when (risk) {
+                        "HIGH"   -> highHazards.add(LatLng(lat, lng))
+                        "MEDIUM" -> mediumHazards.add(LatLng(lat, lng))
+                    }
                 }
-                fetchDirections(origin, destination, hazards)
+
+                // FIX: pass risk as parameter instead of storing in mutable state
+                val risk = evaluateRouteRisk(origin, destination, highHazards)
+                handleRoutingByRisk(origin, destination, highHazards, mediumHazards, risk)
             }
             .addOnFailureListener {
-                // If Firestore fails, still fetch route with no hazard data
-                fetchDirections(origin, destination, emptyList())
+                handleRoutingByRisk(origin, destination, emptyList(), emptyList(), RouteRisk.SAFE)
             }
     }
 
-    // ── Step 2: call Directions API ───────────────────────────────────────────
-    private fun fetchDirections(
+    // ── Step 2: Evaluate risk level ───────────────────────────────────────────
+    private fun evaluateRouteRisk(
         origin: LatLng,
         destination: LatLng,
         hazards: List<LatLng>
+    ): RouteRisk {
+        if (isNearHazard(destination, hazards)) return RouteRisk.DESTINATION_AT_RISK
+        // FIX: also warn if origin itself is inside a hazard zone
+        if (isNearHazard(origin, hazards))      return RouteRisk.ORIGIN_AT_RISK
+        if (hazards.isNotEmpty())               return RouteRisk.ROUTE_AT_RISK
+        return RouteRisk.SAFE
+    }
+
+    // ── Step 3: Route based on risk ───────────────────────────────────────────
+    private fun handleRoutingByRisk(
+        origin: LatLng,
+        destination: LatLng,
+        highHazards: List<LatLng>,
+        mediumHazards: List<LatLng>,
+        risk: RouteRisk   // FIX: passed as param, not stored in mutable state
+    ) {
+        when (risk) {
+            RouteRisk.DESTINATION_AT_RISK -> {
+                Toast.makeText(
+                    this,
+                    "⚠ Destination is inside a HIGH-risk area. Proceeding anyway.",
+                    Toast.LENGTH_LONG
+                ).show()
+                // No avoidance so ORS can still reach the destination
+                fetchORSRoute(origin, destination, emptyList(), mediumHazards, risk)
+            }
+
+            RouteRisk.ORIGIN_AT_RISK -> {
+                Toast.makeText(
+                    this,
+                    "⚠ You are currently in a HIGH-risk area. Finding exit route.",
+                    Toast.LENGTH_LONG
+                ).show()
+                // Still avoid other hazards but not the origin zone
+                val otherHazards = highHazards.filter { !isNearHazard(origin, listOf(it)) }
+                fetchORSRoute(origin, destination, otherHazards, mediumHazards, risk)
+            }
+
+            RouteRisk.ROUTE_AT_RISK -> {
+                fetchORSRoute(origin, destination, highHazards, mediumHazards, risk)
+            }
+
+            RouteRisk.SAFE -> {
+                fetchORSRoute(origin, destination, emptyList(), mediumHazards, risk)
+            }
+        }
+    }
+
+    // ── Step 4: Call ORS ──────────────────────────────────────────────────────
+    private fun fetchORSRoute(
+        origin: LatLng,
+        destination: LatLng,
+        highHazards: List<LatLng>,
+        mediumHazards: List<LatLng>,
+        risk: RouteRisk   // FIX: passed through so drawRouteOnMap can use it
     ) {
         txtRouteResult.text = "Finding safest route…"
 
-        val apiKey = getString(R.string.google_maps_key)
-
-        // Build waypoints string — we route via points near hazards so Google
-        // routes around them. We offset each hazard slightly so the "via"
-        // point is beside the hazard, not through it.
-        val waypointStr = if (hazards.isNotEmpty()) {
-            val viaPoints = hazards.take(8).joinToString("|") { hazard ->
-                // Offset ~300 m north so the route goes near but not through
-                val offsetLat = hazard.latitude + 0.003
-                "via:${offsetLat},${hazard.longitude}"
-            }
-            "&waypoints=optimize:true|$viaPoints"
-        } else ""
-
-        val url = "https://maps.googleapis.com/maps/api/directions/json" +
-                "?origin=${origin.latitude},${origin.longitude}" +
-                "&destination=${destination.latitude},${destination.longitude}" +
-                "&mode=driving" +
-                "&alternatives=true" +
-                waypointStr +
-                "&key=$apiKey"
-
-        CoroutineScope(Dispatchers.IO).launch {
+        activityScope.launch {
             try {
-                val response = URL(url).readText()
-                withContext(Dispatchers.Main) {
-                    handleDirectionsResponse(response, origin, destination, hazards)
+                val coords = JSONArray().apply {
+                    put(JSONArray().apply { put(origin.longitude); put(origin.latitude) })
+                    put(JSONArray().apply { put(destination.longitude); put(destination.latitude) })
                 }
+
+                val body = JSONObject().apply {
+                    put("coordinates", coords)
+                    put("instructions", false)
+                    put("geometry", true)
+
+                    if (highHazards.isNotEmpty()) {
+                        val offset = 0.003
+                        val multiPolygonCoords = JSONArray()
+                        for (h in highHazards) {
+                            val ring = JSONArray().apply {
+                                put(JSONArray().apply { put(h.longitude);          put(h.latitude + offset) })
+                                put(JSONArray().apply { put(h.longitude + offset); put(h.latitude)          })
+                                put(JSONArray().apply { put(h.longitude);          put(h.latitude - offset) })
+                                put(JSONArray().apply { put(h.longitude - offset); put(h.latitude)          })
+                                put(JSONArray().apply { put(h.longitude);          put(h.latitude + offset) })
+                            }
+                            multiPolygonCoords.put(JSONArray().apply { put(ring) })
+                        }
+                        put("options", JSONObject().apply {
+                            put("avoid_polygons", JSONObject().apply {
+                                put("type", "MultiPolygon")
+                                put("coordinates", multiPolygonCoords)
+                            })
+                        })
+                    }
+                }.toString()
+
+                val response = withContext(Dispatchers.IO) {
+                    val conn = URL("https://api.openrouteservice.org/v2/directions/driving-car/geojson")
+                        .openConnection() as java.net.HttpURLConnection
+                    conn.requestMethod = "POST"
+                    conn.setRequestProperty("Content-Type", "application/json")
+                    conn.setRequestProperty("Authorization", ORS_API_KEY)
+                    conn.doOutput = true
+                    conn.outputStream.write(body.toByteArray())
+
+                    if (conn.responseCode != 200) {
+                        val err = conn.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
+                        throw Exception("ORS ${conn.responseCode}: $err")
+                    }
+                    conn.inputStream.bufferedReader().readText()
+                }
+
+                withContext(Dispatchers.Main) {
+                    drawRouteOnMap(response, origin, destination, highHazards, mediumHazards, risk)
+                }
+
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     setLoading(false)
-                    txtRouteResult.text = "Failed to fetch route. Check your internet connection."
-                    Toast.makeText(
-                        this@SafeRouteActivity,
-                        "Network error: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    txtRouteResult.text = "❌ Error: ${e.message}"
+                    Toast.makeText(this@SafeRouteActivity,
+                        "Route error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
-    // ── Step 3: parse response and draw on map ────────────────────────────────
-    private fun handleDirectionsResponse(
+    // ── Step 5: Draw route on map ─────────────────────────────────────────────
+    private fun drawRouteOnMap(
         jsonResponse: String,
         origin: LatLng,
         destination: LatLng,
-        hazards: List<LatLng>
+        highHazards: List<LatLng>,
+        mediumHazards: List<LatLng>,
+        risk: RouteRisk   // FIX: received as param instead of reading mutable state
     ) {
         setLoading(false)
 
-        val json   = JSONObject(jsonResponse)
-        val status = json.getString("status")
+        val json     = JSONObject(jsonResponse)
+        val features = json.optJSONArray("features")
 
-        if (status != "OK") {
-            txtRouteResult.text = "Could not find a route ($status).\nTry different locations."
+        if (features == null || features.length() == 0) {
+            txtRouteResult.text = "Could not find a route. Try different locations."
             return
         }
 
         googleMap.clear()
 
-        val routes = json.getJSONArray("routes")
-
-        // Draw all alternative routes in light gray first
-        for (i in 0 until routes.length()) {
-            val route    = routes.getJSONObject(i)
-            val encoded  = route.getJSONObject("overview_polyline").getString("points")
-            val points   = decodePolyline(encoded)
-
-            if (i > 0) {
-                // Alternative routes — thinner gray
-                googleMap.addPolyline(
-                    PolylineOptions()
-                        .addAll(points)
-                        .color(Color.parseColor("#90A4AE"))
-                        .width(8f)
-                        .pattern(listOf(Dash(20f), Gap(10f)))
-                )
-            }
-        }
-
-        // Draw the primary (safest) route in solid green on top
-        val primaryRoute   = routes.getJSONObject(0)
-        val primaryEncoded = primaryRoute.getJSONObject("overview_polyline").getString("points")
-        val primaryPoints  = decodePolyline(primaryEncoded)
-
-        googleMap.addPolyline(
-            PolylineOptions()
-                .addAll(primaryPoints)
-                .color(Color.parseColor("#2E7D32"))
-                .width(14f)
-        )
-
-        // Origin marker — green
-        googleMap.addMarker(
-            MarkerOptions()
-                .position(origin)
-                .title("Start: $originName")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-        )
-
-        // Destination marker — blue
-        googleMap.addMarker(
-            MarkerOptions()
-                .position(destination)
-                .title("Destination: $destinationName")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-        )
-
-        // Draw red danger circles around each HIGH-risk hazard
-        for (hazard in hazards) {
-            googleMap.addCircle(
-                CircleOptions()
-                    .center(hazard)
-                    .radius(HAZARD_RADIUS_M)
-                    .strokeColor(Color.RED)
-                    .strokeWidth(2f)
-                    .fillColor(Color.argb(60, 255, 0, 0))
-            )
-            googleMap.addMarker(
-                MarkerOptions()
-                    .position(hazard)
-                    .title("⚠ High Risk Area")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        // Alternate routes (gray dashed)
+        for (i in 1 until features.length()) {
+            val pts = orsToLatLng(features.getJSONObject(i)
+                .getJSONObject("geometry").getJSONArray("coordinates"))
+            googleMap.addPolyline(
+                PolylineOptions().addAll(pts)
+                    .color(Color.parseColor("#90A4AE")).width(8f)
+                    .pattern(listOf(Dash(20f), Gap(10f)))
             )
         }
 
-        // Fit map to show the full route
-        val boundsBuilder = LatLngBounds.Builder()
-        primaryPoints.forEach { boundsBuilder.include(it) }
-        hazards.forEach { boundsBuilder.include(it) }
-        googleMap.animateCamera(
-            CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 120)
-        )
-
-        // Summary text
-        val leg           = primaryRoute.getJSONArray("legs").getJSONObject(0)
-        val distanceText  = leg.getJSONObject("distance").getString("text")
-        val durationText  = leg.getJSONObject("duration").getString("text")
-        val hazardNote    = if (hazards.isNotEmpty())
-            "\n⚠ Routing around ${hazards.size} high-risk area(s)"
-        else
-            "\n✓ No high-risk areas on this route"
-
-        txtRouteResult.text =
-            "✅ Safest route: $originName → $destinationName\n" +
-                    "📏 $distanceText  •  🕒 $durationText" +
-                    hazardNote
-    }
-
-    // ── Polyline decoder (Google encoded format) ──────────────────────────────
-    private fun decodePolyline(encoded: String): List<LatLng> {
-        val poly  = mutableListOf<LatLng>()
-        var index = 0
-        val len   = encoded.length
-        var lat   = 0
-        var lng   = 0
-
-        while (index < len) {
-            var b: Int
-            var shift = 0
-            var result = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dLat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-            lat += dLat
-
-            shift  = 0
-            result = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dLng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
-            lng += dLng
-
-            poly.add(LatLng(lat / 1E5, lng / 1E5))
+        // Primary route — color based on risk level
+        val primary    = features.getJSONObject(0)
+        val pts        = orsToLatLng(primary.getJSONObject("geometry").getJSONArray("coordinates"))
+        val routeColor = when (risk) {
+            RouteRisk.SAFE               -> Color.parseColor("#2E7D32") // green
+            RouteRisk.ROUTE_AT_RISK      -> Color.parseColor("#F9A825") // yellow
+            RouteRisk.ORIGIN_AT_RISK     -> Color.parseColor("#E65100") // orange
+            RouteRisk.DESTINATION_AT_RISK -> Color.parseColor("#B71C1C") // red
         }
-        return poly
+        googleMap.addPolyline(PolylineOptions().addAll(pts).color(routeColor).width(14f))
+
+        // Markers
+        googleMap.addMarker(MarkerOptions().position(origin).title("Start")
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)))
+        googleMap.addMarker(MarkerOptions().position(destination).title("Destination")
+            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)))
+
+        // HIGH risk circles (red)
+        for (h in highHazards) {
+            googleMap.addCircle(CircleOptions().center(h).radius(HAZARD_RADIUS_M)
+                .strokeColor(Color.RED).strokeWidth(2f).fillColor(Color.argb(60, 255, 0, 0)))
+            googleMap.addMarker(MarkerOptions().position(h).title("⚠ High Risk Area")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)))
+        }
+
+        // FIX: MEDIUM risk circles (yellow) — shown for awareness but not avoided
+        for (h in mediumHazards) {
+            googleMap.addCircle(CircleOptions().center(h).radius(HAZARD_RADIUS_M)
+                .strokeColor(Color.parseColor("#F9A825")).strokeWidth(2f)
+                .fillColor(Color.argb(40, 249, 168, 37)))
+            googleMap.addMarker(MarkerOptions().position(h).title("⚠ Medium Risk Area")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
+        }
+
+        // Fit camera to route + all hazards
+        val bounds = LatLngBounds.Builder()
+        pts.forEach { bounds.include(it) }
+        highHazards.forEach { bounds.include(it) }
+        mediumHazards.forEach { bounds.include(it) }
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 120))
+
+        // Route summary
+        val properties = primary.getJSONObject("properties")
+        val distM = when {
+            properties.has("summary") -> properties.getJSONObject("summary").getDouble("distance")
+            properties.has("segments") -> properties.getJSONArray("segments").getJSONObject(0).getDouble("distance")
+            else -> 0.0
+        }
+        val durSec = when {
+            properties.has("summary") -> properties.getJSONObject("summary").getDouble("duration")
+            properties.has("segments") -> properties.getJSONArray("segments").getJSONObject(0).getDouble("duration")
+            else -> 0.0
+        }
+        val distTxt = if (distM >= 1000) "%.1f km".format(distM / 1000) else "%.0f m".format(distM)
+        val durTxt  = if (durSec >= 3600)
+            "%.0f hr %.0f min".format(durSec / 3600, (durSec % 3600) / 60)
+        else "%.0f min".format(durSec / 60)
+
+        // Route header label
+        val riskLabel = when (risk) {
+            RouteRisk.SAFE                -> "🟢 Safe Route"
+            RouteRisk.ROUTE_AT_RISK       -> "🟡 Caution Route"
+            RouteRisk.ORIGIN_AT_RISK      -> "🟠 Starting in a HIGH-risk area"
+            RouteRisk.DESTINATION_AT_RISK -> "🔴 Destination is in a HIGH-risk area"
+        }
+
+        // Safety score — based on whether hazards exist and how many were avoided
+        val safetyScore = when (risk) {
+            RouteRisk.SAFE ->
+                "🛡 Safety: High — No danger zones on this route"
+            RouteRisk.ROUTE_AT_RISK ->
+                "🛡 Safety: Medium — Routed around ${highHazards.size} HIGH-risk area(s)"
+            RouteRisk.ORIGIN_AT_RISK ->
+                "🛡 Safety: Low — Your starting point is in a danger zone"
+            RouteRisk.DESTINATION_AT_RISK ->
+                "🛡 Safety: Low — Your destination is in a danger zone"
+        }
+
+        txtRouteResult.text = "$riskLabel\n📏 $distTxt  •  🕒 $durTxt\n$safetyScore"
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-    private fun setLoading(loading: Boolean) {
-        progressBar.visibility    = if (loading) View.VISIBLE else View.GONE
-        btnFindRoute.isEnabled    = !loading
-        btnFindRoute.text         = if (loading) "Finding route…" else "Find Safe Route"
-        editOrigin.isEnabled      = !loading
-        editDestination.isEnabled = !loading
+    private fun isNearHazard(point: LatLng, hazards: List<LatLng>, radius: Double = HAZARD_RADIUS_M): Boolean {
+        val results = FloatArray(1)
+        return hazards.any { h ->
+            android.location.Location.distanceBetween(
+                point.latitude, point.longitude,
+                h.latitude, h.longitude,
+                results
+            )
+            results[0] <= radius
+        }
     }
 
-    private fun setupBackButton() {
-        findViewById<AppCompatButton>(R.id.btnBack).setOnClickListener { finish() }
+    private fun orsToLatLng(coords: JSONArray): List<LatLng> =
+        (0 until coords.length()).map {
+            val c = coords.getJSONArray(it)
+            LatLng(c.getDouble(1), c.getDouble(0))
+        }
+
+    private fun setLoading(loading: Boolean) {
+        progressBar.visibility     = if (loading) View.VISIBLE else View.GONE
+        btnFindRoute.isEnabled     = !loading
+        btnFindRoute.text          = if (loading) "Finding route…" else "Find Safe Route"
+        editOrigin.isEnabled       = !loading
+        editDestination.isEnabled  = !loading
+        btnUseMyLocation.isEnabled = !loading
     }
 }

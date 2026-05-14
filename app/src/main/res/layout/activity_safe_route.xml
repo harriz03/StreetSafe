@@ -1,169 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/safeRouteRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F6FBF7">
+    android:background="#F4FAF5">
 
-    <!-- TOP HEADER -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="22dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="18dp"
-        android:background="#F6FBF7">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnBack"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:text="←"
-            android:textSize="18sp"
-            android:textColor="#2E7D32"
-            android:backgroundTint="#E8F5E9"/>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="14dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Safe Route"
-                android:textColor="#1B5E20"
-                android:textStyle="bold"
-                android:textSize="24sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Find safer roads around high-risk areas"
-                android:textColor="#6B8E72"
-                android:textSize="13sp"/>
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- INPUT CONTAINER -->
+    <!-- ── Green header (matches app design) ── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginStart="18dp"
-        android:layout_marginEnd="18dp"
-        android:background="#FFFFFF"
-        android:elevation="2dp"
-        android:padding="18dp">
+        android:background="@drawable/bg_top_panel"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="52dp"
+        android:paddingBottom="36dp">
 
-        <!-- START -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Starting Point"
-            android:textColor="#4E6E56"
-            android:textStyle="bold"
-            android:textSize="13sp"/>
-
-        <EditText
-            android:id="@+id/editOrigin"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Choose your location"
-            android:focusable="false"
-            android:clickable="true"
-            android:padding="14dp"
-            android:backgroundTint="#C8E6C9"
-            android:textColor="#1B1B1B"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:baselineAligned="false"
+            android:layout_marginBottom="0dp">
 
-        <!-- LOCATION BUTTON -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="←"
+                android:textSize="18sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#33FFFFFF"
+                android:stateListAnimator="@null"
+                android:layout_marginEnd="14dp"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Safe Route"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:textSize="24sp"
+                    android:letterSpacing="0.01"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Find safer roads around high-risk areas"
+                    android:textColor="#C8E6C9"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ── Form card (matches app design) ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_form_card"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="-20dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="28dp"
+        android:paddingBottom="24dp"
+        android:elevation="6dp">
+
+        <!-- STARTING POINT label -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="STARTING POINT"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#1B5E20"
+            android:letterSpacing="0.10"
+            android:layout_marginBottom="6dp"/>
+
+        <!-- Origin field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_input_field_enhanced"
+            android:layout_marginBottom="10dp">
+
+            <View
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_input_accent"/>
+
+            <EditText
+                android:id="@+id/editOrigin"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Search starting point…"
+                android:textColor="#1B5E20"
+                android:textColorHint="#78909C"
+                android:textSize="14sp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:inputType="text"
+                android:background="@android:color/transparent"
+                android:imeOptions="actionSearch"
+                android:maxLines="1"/>
+
+        </LinearLayout>
+
+        <!-- Use My Location button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnUseMyLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="📍 Use My Current Location"
-            android:textAllCaps="false"
-            android:textColor="#2E7D32"
-            android:backgroundTint="#E8F5E9"/>
-
-        <!-- DESTINATION -->
-        <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Destination"
-            android:textColor="#4E6E56"
-            android:textStyle="bold"
-            android:textSize="13sp"/>
+            android:layout_height="36dp"
+            android:text="📍 Use My Location"
+            android:textSize="12sp"
+            android:textColor="#1B5E20"
+            android:background="@drawable/bg_button_secondary"
+            android:stateListAnimator="@null"
+            android:layout_marginBottom="20dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"/>
 
-        <EditText
-            android:id="@+id/editDestination"
+        <!-- DESTINATION label -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="Where are you going?"
-            android:focusable="false"
-            android:clickable="true"
-            android:padding="14dp"
-            android:backgroundTint="#C8E6C9"
-            android:textColor="#1B1B1B"/>
+            android:text="DESTINATION"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#1B5E20"
+            android:letterSpacing="0.10"
+            android:layout_marginBottom="6dp"/>
 
-        <!-- FIND BUTTON -->
+        <!-- Destination field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_input_field_enhanced"
+            android:layout_marginBottom="22dp">
+
+            <View
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_input_accent"/>
+
+            <EditText
+                android:id="@+id/editDestination"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Where are you going?"
+                android:textColor="#1B5E20"
+                android:textColorHint="#78909C"
+                android:textSize="14sp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:inputType="text"
+                android:background="@android:color/transparent"
+                android:imeOptions="actionSearch"
+                android:maxLines="1"/>
+
+        </LinearLayout>
+
+        <!-- Find Route button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnFindRoute"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="22dp"
+            android:layout_height="48dp"
             android:text="Find Safe Route"
             android:textAllCaps="false"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold"
-            android:backgroundTint="#2E7D32"
-            android:textColor="#FFFFFF"/>
+            android:letterSpacing="0.05"
+            android:background="@drawable/bg_button_primary"
+            android:textColor="#1B5E20"
+            android:stateListAnimator="@null"/>
 
-        <!-- LOADING -->
+        <!-- Loading -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="12dp"
             android:visibility="gone"/>
 
     </LinearLayout>
 
-    <!-- RESULT CARD -->
-    <TextView
-        android:id="@+id/txtRouteResult"
+    <!-- ── Route result card ── -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="14dp"
-        android:layout_marginEnd="18dp"
-        android:padding="16dp"
-        android:background="#FFFFFF"
-        android:elevation="1dp"
-        android:text="Your suggested route will appear here"
-        android:textColor="#2F4F35"
-        android:textSize="14sp"/>
+        android:orientation="horizontal"
+        android:background="@drawable/bg_form_card"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="12dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
+        android:elevation="4dp">
 
-    <!-- MAP -->
+        <View
+            android:id="@+id/routeResultAccent"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="#2E7D32"
+            android:layout_marginEnd="14dp"/>
+
+        <TextView
+            android:id="@+id/txtRouteResult"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Your suggested route will appear here after you search."
+            android:textColor="#2F4F35"
+            android:textSize="13sp"
+            android:lineSpacingExtra="4dp"/>
+
+    </LinearLayout>
+
+    <!-- ── Map ── -->
     <fragment
         android:id="@+id/safeRouteMap"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="14dp"/>
+        android:layout_marginTop="12dp"/>
 
 </LinearLayout>
